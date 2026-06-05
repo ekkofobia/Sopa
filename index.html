@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sopatemjua — Sopa de Carne Artesanal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --amarelo: #C9A21A;
+  --amarelo2: #E8BC20;
+  --preto: #111111;
+  --preto2: #1A1A1A;
+  --branco: #F5F5F5;
+  --branco2: #FFFFFF;
+  --font-display: 'Oswald', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { scroll-behavior:smooth; }
+body { background: var(--preto); color: var(--branco); font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; }
+
+.page { display:none; min-height:100vh; background: var(--preto); }
+.page.active { display:block; }
+
+/* TOPBAR */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(17,17,17,0.97); backdrop-filter: blur(20px);
+  border-bottom: 2px solid rgba(201,162,26,0.2);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; height: 38px;
+}
+.topbar-brand { font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: 1px; color: var(--branco); text-transform: uppercase; }
+.topbar-brand span { color: var(--amarelo); }
+
+/* HERO */
+.product-focus-container {
+  background: var(--preto2);
+  padding-bottom: 28px;
+  min-height: calc(100vh - 38px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.hero-product-img {
+  display: block;
+  width: 85%;
+  height: 74vw;
+  max-height: 405px;
+  object-fit: contain;
+  object-position: right bottom;
+  margin: 0 0 -10px auto;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+}
+.hero-product-content {
+  padding: 18px 20px 0;
+  /* original: margin-top: -20% → agora -20% + 15% da altura do container */
+  margin-top: calc(-20% + 15%);
+}
+.hero-product-title {
+  font-family: var(--font-display);
+  /* +10%: 18px → 19.8px */
+  font-size: 19.8px; font-weight: 600; letter-spacing: 0.5px;
+  color: var(--branco2); line-height: 1.05;
+  white-space: nowrap; margin-bottom: 14px;
+}
+/* Preço esquerda, contador direita */
+.hero-qty-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.hero-qty {
+  display: flex; align-items: center;
+  background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden;
+}
+.hero-qty-btn {
+  background: var(--amarelo2); border: none; color: var(--preto);
+  width: 36px; height: 36px; font-size: 22px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; transition: opacity 0.15s; flex-shrink: 0;
+}
+.hero-qty-btn:active { opacity: 0.7; }
+.hero-qty-num {
+  font-family: var(--font-display); font-size: 20px; font-weight: 600;
+  color: var(--branco); min-width: 38px; text-align: center;
+}
+.hero-price {
+  font-family: var(--font-display);
+  /* +10%: 26px → 28.6px */
+  font-size: 28.6px; font-weight: 700;
+  color: var(--amarelo2); letter-spacing: 0.5px;
+}
+.hero-product-desc {
+  /* +10%: 12px → 13.2px */
+  font-size: 13.2px; color: rgba(245,245,245,0.55); line-height: 1.65; margin-bottom: 20px;
+}
+.hero-add-btn {
+  width: 100%; background: var(--amarelo2); border: none; color: var(--preto);
+  font-family: var(--font-display);
+  /* +10%: 16px → 17.6px */
+  font-size: 17.6px; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase; padding: 15px;
+  border-radius: 14px; cursor: pointer; transition: opacity 0.2s;
+  box-shadow: 0 4px 20px rgba(232,188,32,0.28);
+}
+.hero-add-btn:active { opacity: 0.85; }
+
+/* ORDER BAR */
+#order-bar {
+  position: fixed; bottom: 68px; left: 22px; right: 22px;
+  background: var(--amarelo); border-radius: 10px; padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 350; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  transform: translateY(150px); transition: transform 0.3s; overflow: hidden;
+}
+#order-bar.visible { transform: translateY(0); }
+@keyframes shimmer { 0% { left:-100%; } 100% { left:200%; } }
+#order-bar::after { content:''; position:absolute; top:0; left:-100%; width:60%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent); animation:shimmer 2.5s ease-in-out infinite; pointer-events:none; }
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 58px;
+  background: rgba(17,17,17,0.98); backdrop-filter: blur(15px);
+  border-top: 1px solid rgba(201,162,26,0.15);
+  display: flex; align-items: center; justify-content: space-around; z-index: 400;
+}
+.nav-btn {
+  background: none; border: none; color: rgba(201,162,26,0.4);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-family: var(--font-display); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; flex: 1;
+}
+.nav-btn svg { width: 20px; height: 20px; }
+.nav-btn.active { color: var(--amarelo); }
+
+/* CHECKOUT */
+.checkout-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+.checkout-input { width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--amarelo); color: white; border-radius: 6px; font-size: 14px; transition: border 0.15s; }
+.checkout-input:focus { outline: 0 !important; border: 3px solid var(--amarelo2) !important; }
+.cart-fixed-actions {
+  position: fixed; bottom: 58px; left: 0; right: 0; z-index: 450;
+  background: rgba(17,17,17,0.98); border-top: 1px solid rgba(201,162,26,0.2);
+  padding: 10px 14px; display: none; gap: 8px;
+  height: 62px; align-items: center; box-sizing: border-box;
+}
+
+/* RATING */
+.rating-row { background: rgba(255,255,255,0.04); border: 1px solid rgba(201,162,26,0.15); padding: 14px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.rating-label { font-size: 13px; font-weight: 700; color: var(--branco); }
+.stars-container { display: flex; gap: 6px; }
+.star-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: rgba(255,255,255,0.15); transition: transform 0.1s, color 0.1s; }
+.star-btn.active { color: var(--amarelo2); text-shadow: 0 0 8px rgba(232,188,32,0.4); }
+.star-btn:active { transform: scale(0.85); }
+
+/* CLUBE */
+.club-box { background: linear-gradient(135deg, rgba(201,162,26,0.15) 0%, rgba(17,17,17,0) 100%); border: 1px dashed var(--amarelo); border-radius: 12px; padding: 16px; margin: 20px 0; text-align: center; }
+.club-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--amarelo2); margin-bottom: 6px; text-transform: uppercase; }
+.club-desc { font-size: 12px; color: rgba(245,245,245,0.7); line-height: 1.4; margin-bottom: 12px; }
+.club-btn { background: none; border: 1px solid var(--amarelo); color: var(--amarelo); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; width: 100%; }
+.club-btn:active { background: var(--amarelo); color: var(--preto); }
+
+/* WINE BANNER */
+.wine-banner {
+  margin: 20px 0 0;
+  background: #8B1A2E;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+@keyframes shimmer-wine { 0% { left:-100%; } 100% { left:200%; } }
+.wine-banner::after {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  animation: shimmer-wine 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.wine-banner-text {
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.4;
+  flex: 1;
+  position: relative; z-index: 1;
+}
+.wine-banner-text strong {
+  display: block;
+  font-size: 13px;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+.wine-banner-btn {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+  position: relative; z-index: 1;
+}
+.wine-banner-btn:active { opacity: 0.8; }
+
+/* PÁGINA VINHO */
+#page-wine {
+  background: linear-gradient(180deg, #1a0a0e 0%, #111111 40%);
+}
+.wine-eyebrow {
+  font-family: var(--font-display);
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(200,80,100,0.7); margin-bottom: 6px;
+}
+.wine-hero-sub {
+  font-size: 12px; color: rgba(245,245,245,0.5); line-height: 1.5;
+}
+.wine-reasons { padding: 24px 20px 0; }
+.wine-reasons-title {
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; color: rgba(200,80,100,0.8);
+  margin-bottom: 16px;
+}
+.wine-reason { display: flex; gap: 12px; margin-bottom: 18px; align-items: flex-start; }
+.wine-reason-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.wine-reason-text { font-size: 12px; color: rgba(245,245,245,0.7); line-height: 1.6; }
+.wine-reason-text strong { display: block; font-size: 13px; color: var(--branco2); margin-bottom: 2px; }
+.wine-callout {
+  margin: 20px 20px 0;
+  background: rgba(139,26,46,0.2);
+  border: 1px solid rgba(180,30,60,0.4);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 12px;
+  color: rgba(245,245,245,0.8);
+  line-height: 1.6;
+  font-style: italic;
+}
+.wine-stock {
+  text-align: center;
+  margin: 20px 20px 0;
+  font-family: var(--font-display);
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(200,80,100,0.9);
+  background: rgba(139,26,46,0.15);
+  border: 1px dashed rgba(180,30,60,0.4);
+  border-radius: 8px;
+  padding: 10px;
+}
+.wine-back-btn {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 12px 20px 0;
+  background: none;
+  border: 1px solid rgba(245,245,245,0.15);
+  color: rgba(245,245,245,0.5);
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 600;
+  text-transform: uppercase; padding: 12px;
+  border-radius: 12px; cursor: pointer;
+}
+
+/* TOAST */
+#toast { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--amarelo); color: var(--preto); padding: 10px 22px; border-radius: 999px; font-size: 13px; font-weight: 700; z-index: 1000; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* DRAWER MENU */
+#menu-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:800; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+#menu-overlay.open { opacity:1; pointer-events:all; }
+#menu-drawer {
+  position:fixed; top:0; right:0; width:80%; max-width:300px; height:100%;
+  background:#141414; z-index:900; transform:translateX(100%);
+  transition:transform 0.35s cubic-bezier(.4,0,.2,1);
+  display:flex; flex-direction:column; overflow-y:auto;
+  border-left:1px solid rgba(201,162,26,0.15);
+}
+#menu-drawer.open { transform:translateX(0); }
+.drawer-close { position:absolute; top:14px; right:16px; background:none; border:none; color:rgba(245,245,245,0.5); font-size:24px; cursor:pointer; }
+.drawer-section { padding:20px 20px 0; }
+.drawer-divider { border:none; border-top:1px solid rgba(201,162,26,0.1); margin:16px 20px; }
+.drawer-label { font-family:var(--font-display); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(201,162,26,0.95); margin-bottom:10px; }
+.drawer-soup-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.drawer-soup-icon { font-size:20px; }
+.drawer-soup-name { font-family:var(--font-display); font-size:15px; font-weight:600; color:var(--branco2); }
+.drawer-soup-desc { font-size:11px; color:rgba(245,245,245,0.45); }
+.drawer-social { display:flex; gap:12px; margin-top:4px; }
+.drawer-social-btn { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:10px 14px; color:var(--branco); font-family:var(--font-display); font-size:12px; font-weight:600; text-decoration:none; flex:1; justify-content:center; }
+.drawer-social-btn.ig { border-color:rgba(225,48,108,0.3); color:#e1306c; }
+.drawer-social-btn.wa { border-color:rgba(37,211,102,0.3); color:#25d366; }
+.drawer-hours { background:rgba(201,162,26,0.07); border:1px solid rgba(201,162,26,0.15); border-radius:10px; padding:12px 14px; }
+.drawer-hours-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.drawer-hours-day { font-size:12px; color:rgba(245,245,245,0.6); }
+.drawer-hours-time { font-family:var(--font-display); font-size:13px; font-weight:600; color:var(--amarelo2); }
+.drawer-map { border-radius:10px; overflow:hidden; margin-top:4px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); padding:12px 14px; }
+.drawer-map-row { display:flex; gap:10px; align-items:flex-start; }
+.drawer-map-icon { font-size:20px; flex-shrink:0; }
+.drawer-map-text { font-size:12px; color:rgba(245,245,245,0.65); line-height:1.5; }
+.drawer-map-text strong { display:block; font-size:13px; color:var(--branco2); margin-bottom:2px; }
+.drawer-site-btn { display:block; margin:4px 0 0; background:var(--amarelo2); border:none; color:var(--preto); font-family:var(--font-display); font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; padding:14px; border-radius:12px; cursor:pointer; text-align:center; text-decoration:none; }
+
+/* CART BADGE */
+.nav-cart-wrap { position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+#cart-badge { position:absolute; top:-4px; right:calc(50% - 18px); background:var(--amarelo2); color:var(--preto); font-size:9px; font-weight:900; width:16px; height:16px; border-radius:50%; display:none; align-items:center; justify-content:center; font-family:var(--font-display); }
+
+/* PÁGINA BENEFÍCIOS */
+#page-benefits { background: var(--preto); }
+.benefit-hero {
+  background: linear-gradient(135deg, #8B1A2E 0%, #3d0a14 100%);
+  padding: 32px 20px 28px;
+  text-align: center;
+  border-radius: 0 0 20px 20px;
+  margin-bottom: 20px;
+}
+.benefit-hero-emoji { font-size: 44px; margin-bottom: 10px; display: block; }
+.benefit-hero-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: white; margin-bottom: 8px; line-height: 1.2; }
+.benefit-hero-sub { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+.benefit-card {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 16px; margin: 0 16px 12px;
+}
+.benefit-icon {
+  width: 52px; height: 52px; border-radius: 12px;
+  background: rgba(0,0,0,0.3); display: flex; align-items: center;
+  justify-content: center; font-size: 26px; flex-shrink: 0;
+}
+.benefit-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--amarelo2); margin-bottom: 4px; }
+.benefit-desc { font-size: 12px; color: rgba(245,245,245,0.65); line-height: 1.6; }
+.benefit-desc strong { color: var(--branco2); }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- MENU -->
+<div id="page-menu" class="page active" style="padding-bottom:140px;">
+  <div class="topbar">
+    <div class="topbar-brand">&#x1F372; Sopa<span>tem</span>jua</div>
+    <button onclick="toggleMenu()" style="background:none; border:none; color:var(--amarelo); cursor:pointer; padding:4px; display:flex; flex-direction:column; gap:5px; justify-content:center; align-items:center; width:36px; height:36px;">
+      <span id="hb1" style="display:block; width:22px; height:2px; background:var(--amarelo); border-radius:2px; transition:all 0.3s;"></span>
+      <span id="hb2" style="display:block; width:22px; height:2px; background:var(--amarelo); border-radius:2px; transition:all 0.3s;"></span>
+      <span id="hb3" style="display:block; width:22px; height:2px; background:var(--amarelo); border-radius:2px; transition:all 0.3s;"></span>
+    </button>
+  </div>
+
+  <div class="product-focus-container">
+    <img class="hero-product-img"
+      src="https://res.cloudinary.com/dwrq06fta/image/upload/v1780376922/1000511190-removebg-preview_tywdml.png"
+      alt="Sopa de Carne Artesanal">
+    <div class="hero-product-content">
+      <div class="hero-product-title">Sopa de Carne</div>
+      <div class="hero-qty-row">
+        <div class="hero-price">R$ 24,90</div>
+        <div class="hero-qty">
+          <button class="hero-qty-btn" onclick="addSopa(-1)">&#8722;</button>
+          <div class="hero-qty-num" id="sopa-qty-display">0</div>
+          <button class="hero-qty-btn" onclick="addSopa(1)">+</button>
+        </div>
+      </div>
+      <p class="hero-product-desc">
+        <span style="color:var(--amarelo2); font-weight:700;">500ml</span> de sopa com: carne bovina, cenoura, batata e mandioca, coentro e temperos da casa. Acompanhada de torradas artesanais.<br><br>
+        Serve: uma pessoa que come muito. Ou:<br>
+        Serve: uma pessoa que come pouco e uma criança.<br>
+        &#x1F35B;&#x1F969;&#x1F955;&#x1F954;&#x1FAD1;&#x1F35E;&#x1F9C2;&#x1F9C4;&#x1F9C5;
+      </p>
+    </div>
+  </div>
+
+  <div id="order-bar">
+    <div style="color:var(--preto);">
+      <div id="order-bar-count" style="font-size:11px; font-weight:800; text-transform:uppercase;">0 itens</div>
+      <div id="order-bar-total" style="font-family:var(--font-display); font-size:18px; font-weight:700;">R$ 0,00</div>
+    </div>
+    <button style="background:var(--preto); color:var(--amarelo); border:none; padding:8px 16px; border-radius:6px; font-weight:800;" onclick="goPage('cart')">Avan&#231;ar</button>
+  </div>
+</div>
+
+<!-- CHECKOUT -->
+<div id="page-cart" class="page" style="padding-bottom:140px;">
+  <div class="topbar"><div class="topbar-brand" style="font-size:16px;">Confirmar Pedido</div></div>
+  <div id="cart-container"></div>
+</div>
+
+<!-- AVALIACAO -->
+<div id="page-rating" class="page" style="padding:20px 20px 100px;">
+  <div style="font-family:var(--font-display); font-size:34px; font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;">Clube</div>
+  <div style="font-size:12px; opacity:0.5; margin-bottom:24px;">Deixe sua nota para melhorarmos sempre</div>
+  <div class="rating-row">
+    <span class="rating-label">Sabor da Sopa</span>
+    <div class="stars-container" id="stars-sabor">
+      <button class="star-btn" onclick="setRate('sabor',1)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('sabor',2)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('sabor',3)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('sabor',4)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('sabor',5)">&#9733;</button>
+    </div>
+  </div>
+  <div class="rating-row">
+    <span class="rating-label">Temperatura</span>
+    <div class="stars-container" id="stars-temperatura">
+      <button class="star-btn" onclick="setRate('temperatura',1)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('temperatura',2)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('temperatura',3)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('temperatura',4)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('temperatura',5)">&#9733;</button>
+    </div>
+  </div>
+  <div class="rating-row">
+    <span class="rating-label">Tempo de Entrega</span>
+    <div class="stars-container" id="stars-entrega">
+      <button class="star-btn" onclick="setRate('entrega',1)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('entrega',2)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('entrega',3)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('entrega',4)">&#9733;</button>
+      <button class="star-btn" onclick="setRate('entrega',5)">&#9733;</button>
+    </div>
+  </div>
+  <div class="club-box">
+    <div class="club-title">&#10024; Clube Sopatemjua</div>
+    <div class="club-desc" style="font-size:13px; margin-bottom:10px;">Desconto exclusivo, sorteios e muito mais para quem tá no clube. Entre já.</div>
+
+    <button class="club-btn" style="margin-bottom:8px;" onclick="goPage('rating')">&#11088; Quero Participar</button>
+    <button class="club-btn" onclick="verBeneficios()">Conhecer todos benefícios</button>
+  </div>
+  <textarea id="rating-comment" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(201,162,26,0.2); border-radius:8px; padding:15px; color:white; min-height:100px; margin:14px 0 20px; font-family:'Inter',sans-serif; font-size:13px;" placeholder="Escreva um comentario (opcional)..."></textarea>
+  <button style="width:100%; background:var(--amarelo); border:none; color:var(--preto); font-family:var(--font-display); font-weight:700; padding:16px; border-radius:8px; font-size:16px; text-transform:uppercase;" onclick="enviarAvaliacao()">Enviar Avalia&#231;&#227;o no WhatsApp</button>
+</div>
+
+<!-- SOBRE -->
+<div id="page-sobre" class="page" style="padding:20px; text-align:center;">
+  <div style="font-size:56px; margin-bottom:16px;">&#x1F372;</div>
+  <div style="font-family:var(--font-display); font-size:34px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">Sopatemjua</div>
+  <div style="font-size:14px; opacity:0.7; margin-bottom:20px;">Especialistas em Sopa de Carne Artesanal</div>
+  <button style="background:var(--amarelo); color:var(--preto); border:none; padding:14px 28px; border-radius:30px; font-family:var(--font-display); font-weight:700; font-size:15px; text-transform:uppercase; cursor:pointer;" onclick="goPage('menu')">Voltar ao Site</button>
+</div>
+
+<!-- PÁGINA VINHO -->
+<div id="page-wine" class="page" style="padding-bottom:100px;">
+  <div class="topbar">
+    <div class="topbar-brand" style="font-size:15px;">Harmoniza&#231;&#227;o</div>
+    <button onclick="goPage('cart')" style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); color:var(--branco); font-family:var(--font-display); font-size:11px; font-weight:600; text-transform:uppercase; padding:6px 14px; border-radius:20px; cursor:pointer;">Voltar</button>
+  </div>
+
+  <div style="position:relative; border-bottom:1px solid rgba(180,30,60,0.2); background:linear-gradient(180deg,rgba(80,10,20,0.5) 0%,transparent 100%);">
+    <!-- Garrafa: absolute, direita, base no fundo -->
+    <img
+      src="https://res.cloudinary.com/dwrq06fta/image/upload/v1780432021/1000511623-removebg-preview_ppm1v7.png"
+      alt="Vinho Merlot"
+      style="position:absolute; right:0; top:20%; width:238px; height:auto; object-fit:contain; filter:drop-shadow(-6px 10px 20px rgba(0,0,0,0.9)); pointer-events:none; transform:rotate(7deg); transform-origin:bottom right;">
+    <!-- Texto: largura total, sem competir com garrafa no flex -->
+    <div style="padding:24px 20px 16px 20px; position:relative; z-index:2;">
+      <div class="wine-eyebrow" style="margin-bottom:6px;">O par perfeito</div>
+      <div style="font-family:var(--font-display); font-size:26px; font-weight:700; color:var(--branco2); line-height:1.05; margin-bottom:6px; white-space:nowrap;">
+        Vinho Tinto <span style="color:#D4506A;">Merlot</span>
+      </div>
+      <p class="wine-hero-sub" style="text-align:left; margin-bottom:18px;">N&#227;o qualquer vinho. O Merlot.</p>
+      <button onclick="addVinho()" style="background:#8B1A2E; border:none; color:white; font-family:var(--font-display); font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; padding:9px 14px; border-radius:10px; cursor:pointer; box-shadow:0 3px 12px rgba(139,26,46,0.5); white-space:nowrap;">
+        Adicionar &mdash; R$ 39,90
+      </button>
+    </div>
+  </div>
+
+  <div class="wine-reasons">
+    <div class="wine-reasons-title">Por que o Merlot?</div>
+    <div class="wine-reason"><div class="wine-reason-icon">&#128523;</div><div class="wine-reason-text"><strong>Paladar Sempre Fresco</strong>Esse vinho limpa as suas papilas gustativas a cada colherada, fazendo com que a sopa nunca fique enjoativa.</div></div>
+    <div class="wine-reason"><div class="wine-reason-icon">&#9889;</div><div class="wine-reason-text"><strong>Equilibra o Salgado</strong>Contrasta perfeitamente com o sal da sopa, criando um equil&#237;brio perfeito no paladar.</div></div>
+    <div class="wine-reason"><div class="wine-reason-icon">&#129498;</div><div class="wine-reason-text"><strong>Leveza no Est&#244;mago</strong>Ele n&#227;o briga com o peso dos legumes e da carne, deixando a refei&#231;&#227;o aconchegante e leve.</div></div>
+    <div class="wine-reason"><div class="wine-reason-icon">&#10024;</div><div class="wine-reason-text"><strong>Sofistica&#231;&#227;o Acess&#237;vel</strong>Garante a experi&#234;ncia elegante de uma harmoniza&#231;&#227;o de restaurante com um r&#243;tulo que custa praticamente 30x mais caro.</div></div>
+    <div class="wine-reason"><div class="wine-reason-icon">&#127862;</div><div class="wine-reason-text"><strong>Textura Aveludada na Boca</strong>Esse vinho desliza suavemente pelo paladar, imitando o conforto e a cremosidade de um bom caldo quente.</div></div>
+    <div class="wine-reason"><div class="wine-reason-icon">&#127826;</div><div class="wine-reason-text"><strong>Aroma que Abre o Apetite</strong>O perfume de frutas vermelhas e especiarias que exala da ta&#231;a combina com o cheiro da sopa, tornando a refei&#231;&#227;o uma experi&#234;ncia visual e olfativa completa.</div></div>
+    <div class="wine-reason"><div class="wine-reason-icon">&#10052;</div><div class="wine-reason-text"><strong>Perfeito para o Clima Frio</strong>&#201; a combina&#231;&#227;o definitiva para noites frias. Enquanto a sopa aquece o corpo, o vinho traz o aconchego ideal para relaxar no fim do dia.</div></div>
+    <div class="wine-reason"><div class="wine-reason-icon">&#128526;</div><div class="wine-reason-text"><strong>Sem Ressaca no Dia Seguinte</strong>Vinhos finos passam por processos de produ&#231;&#227;o muito mais rigorosos e limpos do que os vinhos de mesa comuns.</div></div>
+  </div>
+
+  <div class="wine-callout">Largue o P&#233;rgula e Dom Bosco que brigam com o sabor do prato. Fa&#231;a o teste definitivo hoje mesmo!</div>
+  <div class="wine-stock">&#127381; Apenas 12 vinhos dispon&#237;veis por semana</div>
+  <div style="display:flex; gap:10px; margin:20px 20px 0; padding-bottom:4px;">
+    <button onclick="goPage('cart')" style="flex:1; background:#ffffff; border:none; color:#111111; font-family:var(--font-display); font-size:13px; font-weight:700; text-transform:uppercase; padding:14px 10px; border-radius:14px; cursor:pointer; line-height:1.3;">
+      Continuar<br>sem vinho
+    </button>
+    <button onclick="addVinho()" style="flex:1; background:#8B1A2E; border:none; color:white; font-family:var(--font-display); font-size:13px; font-weight:700; text-transform:uppercase; padding:14px 10px; border-radius:14px; cursor:pointer; box-shadow:0 4px 20px rgba(139,26,46,0.4); line-height:1.3;">
+      Adicionar Merlot<br><span style="font-size:15px; color:rgba(255,255,255,0.85);">R$ 39,90</span>
+    </button>
+  </div>
+  <div style="height:12px;"></div>
+</div>
+
+<!-- ACTIONS FIXAS CHECKOUT -->
+<div id="cart-fixed-actions" class="cart-fixed-actions">
+  <button onclick="goPage('menu')" style="background:#ffffff; border:none; color:var(--preto); font-weight:800; padding:12px; border-radius:6px; flex:1;">Voltar</button>
+  <!-- Estado 1: dados incompletos -->
+  <button id="btn-whatsapp-disabled" style="background:rgba(7,94,84,0.35); border:none; color:rgba(255,255,255,0.35); font-weight:700; padding:12px; border-radius:6px; flex:2; pointer-events:none;">Confirmar no WhatsApp</button>
+  <!-- Estado 2: dados ok, aguardando colher -->
+  <div id="btn-colher-row" style="display:none; flex:2; background:#075e54; border-radius:6px; align-items:center; justify-content:center; padding:0 8px; gap:12px; height:100%; overflow:visible;">
+    <span style="color:white; font-family:var(--font-display); font-size:14px; font-weight:700; white-space:nowrap;">Colher?</span>
+    <button onclick="setColher('sim')" id="colher-sim" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; font-family:var(--font-display); font-size:13px; font-weight:700; padding:6px 16px; border-radius:6px; cursor:pointer; white-space:nowrap;">Sim</button>
+    <button onclick="setColher('nao')" id="colher-nao" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; font-family:var(--font-display); font-size:13px; font-weight:700; padding:6px 16px; border-radius:6px; cursor:pointer; white-space:nowrap;">Não</button>
+  </div>
+  <!-- Estado 3: tudo ok, pronto para enviar -->
+  <button id="btn-whatsapp" onclick="enviarPedido()" style="display:none; background:#075e54; border:none; color:white; font-weight:700; padding:12px; border-radius:6px; flex:2;">Confirmar no WhatsApp</button>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="nav-btn active" id="nav-menu" onclick="goPage('menu')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>In&#237;cio
+  </button>
+  <button class="nav-btn" id="nav-cart" onclick="goPage('cart')" style="position:relative;">
+    <div style="position:relative; display:inline-flex;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
+      <span id="cart-badge" style="position:absolute; top:-6px; right:-8px; background:var(--amarelo2); color:var(--preto); font-size:9px; font-weight:900; min-width:15px; height:15px; border-radius:50%; display:none; align-items:center; justify-content:center; font-family:var(--font-display); padding:0 2px;">0</span>
+    </div>Checkout
+  </button>
+  <button class="nav-btn" id="nav-rating" onclick="goPage('rating')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Clube
+  </button>
+</nav>
+
+<script>
+var WHATSAPP = '5574988534600';
+var cart = [];
+var checkoutData = { nome: '', rua: '', bairro: '', num: '' };
+var notasAvaliacao = { sabor: 5, temperatura: 5, entrega: 5 };
+
+function addVinho() {
+  var ex = cart.find(function(c){ return c.id === 'vinho'; });
+  if(!ex) cart.push({ id: 'vinho', name: 'Vinho Tinto Merlot', price: 39.90, qty: 1 });
+  showToast('Merlot adicionado! \u2764\ufe0f');
+  goPage('cart');
+}
+
+function addSopa(delta) {
+  var ex = cart.find(function(c){ return c.id === 'sopa'; });
+  if(ex) {
+    ex.qty += delta;
+    if(ex.qty <= 0) cart = cart.filter(function(c){ return c.id !== 'sopa'; });
+  } else if(delta > 0) {
+    cart.push({ id: 'sopa', name: 'Sopa de Carne Artesanal', price: 24.90, qty: 1 });
+  }
+  updateUI();
+}
+
+/* Alteração de qty genérica usada nos botões do carrinho */
+function changeQty(id, delta) {
+  var ex = cart.find(function(c){ return c.id === id; });
+  if(ex) {
+    ex.qty += delta;
+    if(ex.qty <= 0) cart = cart.filter(function(c){ return c.id !== id; });
+  } else if(delta > 0) {
+    if(id === 'sopa') cart.push({ id: 'sopa', name: 'Sopa de Carne Artesanal', price: 24.90, qty: 1 });
+    if(id === 'vinho') cart.push({ id: 'vinho', name: 'Vinho Tinto Merlot', price: 39.90, qty: 1 });
+  }
+  updateUI();
+  renderCart();
+}
+
+function updateUI() {
+  var sopa = cart.find(function(c){ return c.id === 'sopa'; });
+  document.getElementById('sopa-qty-display').textContent = sopa ? sopa.qty : 0;
+  var bar = document.getElementById('order-bar');
+  if(cart.length === 0) { bar.classList.remove('visible'); var b=document.getElementById('cart-badge'); if(b) b.style.display='none'; return; }
+  bar.classList.add('visible');
+  var totalQty = cart.reduce(function(a,b){ return a + b.qty; }, 0);
+  var totalMoney = cart.reduce(function(a,b){ return a + b.price * b.qty; }, 0);
+  document.getElementById('order-bar-count').textContent = totalQty + ' itens';
+  var badge = document.getElementById('cart-badge');
+  if(badge) { badge.textContent = totalQty; badge.style.display = totalQty > 0 ? 'flex' : 'none'; }
+  document.getElementById('order-bar-total').textContent = 'R$ ' + totalMoney.toFixed(2).replace('.',',');
+}
+
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  var pg = document.getElementById('page-' + name);
+  if(pg) pg.classList.add('active');
+  document.getElementById('bottom-nav').style.display = 'flex';
+  document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.toggle('active', b.id === 'nav-' + name); });
+  document.getElementById('cart-fixed-actions').style.display = (name === 'cart' && cart.length > 0) ? 'flex' : 'none';
+  if(name === 'menu') { updateUI(); }
+  else { document.getElementById('order-bar').classList.remove('visible'); }
+  if(name === 'cart') { renderCart(); }
+}
+
+function renderCart() {
+  var container = document.getElementById('cart-container');
+  if(cart.length === 0) {
+    container.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5;">Seu carrinho esta vazio</div>';
+    validarWhatsapp(); return;
+  }
+  var sub = cart.reduce(function(a,b){ return a + b.price * b.qty; }, 0);
+  var html = '<div style="padding:16px;">';
+  cart.forEach(function(it){
+    html += '<div style="background:rgba(255,255,255,0.04); padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">';
+    html += '<div><div style="font-weight:700; font-size:13px;">' + it.name + '</div>';
+    html += '<div style="color:var(--amarelo); font-size:12px;">R$ ' + (it.price * it.qty).toFixed(2).replace('.',',') + '</div></div>';
+    html += '<div style="display:flex; align-items:center; gap:10px;">';
+    html += '<button onclick="changeQty(\'' + it.id + '\',-1)" style="width:24px; height:24px; border-radius:50%; border:1px solid var(--amarelo); background:none; color:var(--amarelo);">&#8722;</button>';
+    html += '<span>' + it.qty + '</span>';
+    html += '<button onclick="changeQty(\'' + it.id + '\',1)" style="width:24px; height:24px; border-radius:50%; border:1px solid var(--amarelo); background:none; color:var(--amarelo);">+</button>';
+    html += '</div></div>';
+  });
+  html += '<div style="margin:16px 0 24px; font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--amarelo2); text-align:right; border-top:1px solid rgba(201,162,26,0.15); padding-top:16px;">Total: R$ ' + sub.toFixed(2).replace('.',',') + '</div>';
+  html += '<div class="wine-banner"><div class="wine-banner-text"><strong>Sabe qual bebida combina com sua sopa?</strong>A resposta vai te surpreender.</div><button class="wine-banner-btn" onclick="goPage(\'wine\')">Descubra</button></div>';
+  html += '<div style="font-family:var(--font-display); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:rgba(201,162,26,0.95); margin:20px 0 12px;">Informacoes de Entrega</div>';
+  html += '<div class="checkout-fields">';
+  html += '<input type="text" class="checkout-input" placeholder="Seu Nome *" value="' + checkoutData.nome + '" oninput="checkoutData.nome=this.value; validarWhatsapp();">';
+  html += '<div style="display:flex; gap:8px;">';
+  html += '<input type="text" class="checkout-input" style="flex:1;" placeholder="Rua *" value="' + checkoutData.rua + '" oninput="checkoutData.rua=this.value; validarWhatsapp();">';
+  html += '<input type="text" class="checkout-input" style="width:90px;" placeholder="No *" value="' + checkoutData.num + '" oninput="checkoutData.num=this.value; validarWhatsapp();">';
+  html += '</div>';
+  html += '<input type="text" class="checkout-input" placeholder="Bairro *" value="' + checkoutData.bairro + '" oninput="checkoutData.bairro=this.value; validarWhatsapp();">';
+  html += '<textarea id="obs-input" class="checkout-input" placeholder="Observações (opcional)" style="min-height:70px; resize:none;" oninput="onObsInput(this.value)">' + (checkoutData.obs||'') + '</textarea>';
+
+  html += '</div></div>';
+  container.innerHTML = html;
+  validarWhatsapp();
+}
+
+function validarWhatsapp() {
+  var dis = document.getElementById('btn-whatsapp-disabled');
+  var row = document.getElementById('btn-colher-row');
+  var btn = document.getElementById('btn-whatsapp');
+  if(!dis) return;
+  var dadosOk = checkoutData.nome.trim() !== '' && checkoutData.rua.trim() !== '' && checkoutData.bairro.trim() !== '' && checkoutData.num.trim() !== '';
+  var colherOk = checkoutData.colher === 'sim' || checkoutData.colher === 'nao';
+  if(!dadosOk) {
+    dis.style.display = 'block'; row.style.display = 'none'; btn.style.display = 'none';
+  } else if(dadosOk && !colherOk) {
+    dis.style.display = 'none'; row.style.display = 'flex'; btn.style.display = 'none';
+  } else {
+    dis.style.display = 'none'; row.style.display = 'none'; btn.style.display = 'block';
+    var sub = cart.reduce(function(a,b){ return a + b.price * b.qty; }, 0);
+    btn.textContent = 'WhatsApp — R$ ' + sub.toFixed(2).replace('.',',');
+  }
+}
+
+function setColher(val) {
+  checkoutData.colher = val;
+  var simBtn = document.getElementById('colher-sim');
+  var naoBtn = document.getElementById('colher-nao');
+  if(simBtn) { simBtn.style.background = val==='sim' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)'; simBtn.style.borderColor = val==='sim' ? 'white' : 'rgba(255,255,255,0.3)'; }
+  if(naoBtn) { naoBtn.style.background = val==='nao' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)'; naoBtn.style.borderColor = val==='nao' ? 'white' : 'rgba(255,255,255,0.3)'; }
+  var obsEl = document.getElementById('obs-input');
+  if(obsEl) {
+    var base = checkoutData.obs || '';
+    var colherTxt = val === 'sim' ? 'Coloque colher.' : 'Sem colher.';
+    base = base.replace(/ ?(Coloque colher\.|Sem colher\.)/g, '').trimEnd();
+    obsEl.value = base ? base + ' ' + colherTxt : colherTxt;
+    checkoutData.obs = obsEl.value;
+  }
+  setTimeout(validarWhatsapp, 150);
+}
+
+function onObsInput(val) {
+  checkoutData.obs = val;
+  var temColher = /(Coloque colher\.|Sem colher\.)/.test(val);
+  if(!temColher) {
+    // Reset colher e mostrar botões novamente
+    checkoutData.colher = null;
+    var simBtn = document.getElementById('colher-sim');
+    var naoBtn = document.getElementById('colher-nao');
+    if(simBtn) { simBtn.style.background = 'rgba(255,255,255,0.15)'; simBtn.style.borderColor = 'rgba(255,255,255,0.3)'; }
+    if(naoBtn) { naoBtn.style.background = 'rgba(255,255,255,0.15)'; naoBtn.style.borderColor = 'rgba(255,255,255,0.3)'; }
+  }
+  validarWhatsapp();
+}
+
+
+function enviarPedido() {
+  var sub = cart.reduce(function(a,b){ return a + b.price * b.qty; }, 0);
+  var msg = '*Novo Pedido - Sopatemjua*\n*Delivery: ' + checkoutData.nome + ' - ' + checkoutData.rua + ', ' + checkoutData.num + ' - ' + checkoutData.bairro + '*\n------------------\n';
+  cart.forEach(function(it){ msg += '- ' + it.qty + 'x ' + it.name + '\n'; });
+  var obsTexto = (checkoutData.obs && checkoutData.obs.trim()) ? checkoutData.obs.trim() : '';
+  var colherTexto = checkoutData.colher === 'sim' ? 'Coloque colher.' : 'Sem colher.';
+  var obsFinal = obsTexto ? obsTexto + ' ' + colherTexto : colherTexto;
+  if(obsFinal) msg += 'Obs: ' + obsFinal + '\n';
+  msg += '------------------\n*Total: R$ ' + sub.toFixed(2).replace('.',',') + '*';
+  window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
+  showToast('Pedido direcionado!');
+}
+
+function setRate(category, value) {
+  notasAvaliacao[category] = value;
+  var buttons = document.getElementById('stars-' + category).querySelectorAll('.star-btn');
+  buttons.forEach(function(btn, i){ btn.classList.toggle('active', i < value); });
+}
+
+function entrarNoClube() {
+  var msg = '*Quero fazer parte do Clube Sopatemjua!*\nMe envie cupons e novidades.';
+  window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
+  showToast('Solicitacao enviada!');
+}
+
+function enviarAvaliacao() {
+  var comment = document.getElementById('rating-comment').value;
+  var msg = '*Avaliacao - Sopatemjua*\nSabor: ' + notasAvaliacao.sabor + '/5\nTemperatura: ' + notasAvaliacao.temperatura + '/5\nEntrega: ' + notasAvaliacao.entrega + '/5';
+  if(comment.trim()) msg += '\nFeedback: ' + comment;
+  window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
+  showToast('Obrigado pela avaliacao!');
+}
+
+function showToast(m) {
+  var t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+
+
+function verBeneficios() {
+  goPage('benefits');
+}
+
+function toggleMenu() {
+  var drawer = document.getElementById('menu-drawer');
+  var overlay = document.getElementById('menu-overlay');
+  drawer.classList.toggle('open');
+  overlay.classList.toggle('open');
+}
+
+window.addEventListener('load', function() {
+  setRate('sabor', 0); setRate('temperatura', 0); setRate('entrega', 0);
+  updateUI();
+});
+</script>
+
+<!-- OVERLAY -->
+<div id="menu-overlay" onclick="toggleMenu()"></div>
+
+<!-- DRAWER -->
+<div id="menu-drawer">
+  <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px 0;">
+    <div style="font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--amarelo);">&#x1F372; Sopatemjua</div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <a href="https://instagram.com/sopatemjua" target="_blank" style="color:#e1306c; display:flex;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      </a>
+      <a href="https://wa.me/5574988534600" target="_blank" style="color:#25d366; display:flex;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      </a>
+      <button class="drawer-close" onclick="toggleMenu()" style="position:static; font-size:20px; color:rgba(245,245,245,0.5); background:none; border:none; cursor:pointer; padding:0; margin-left:8px;">&#10005;</button>
+    </div>
+  </div>
+
+  <!-- Descrição -->
+  <div class="drawer-section" style="padding-top:16px;">
+    <div style="font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--branco2); margin-bottom:6px;">&#x1F372; Sopatemjua</div>
+    <p style="font-size:12px; color:rgba(245,245,245,0.55); line-height:1.65;">Sopa de carne artesanal feita com ingredientes frescos e temperos da casa. Servida bem quente, com torradas artesanais. Tradição e sabor em cada colherada.</p>
+  </div>
+
+  <hr class="drawer-divider">
+
+  <!-- Horário -->
+  <div class="drawer-section">
+    <div class="drawer-label">Horário de Funcionamento</div>
+    <div class="drawer-hours">
+      <div class="drawer-hours-row" style="margin-bottom:0;">
+        <span class="drawer-hours-day">📅 Terça-feira</span>
+        <span class="drawer-hours-time">18h às 22h</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="drawer-divider">
+
+  <!-- Sopas -->
+  <div class="drawer-section">
+    <div class="drawer-label">Cardápio</div>
+    <div class="drawer-soup-item">
+      <span class="drawer-soup-icon">&#x1F969;</span>
+      <div><div class="drawer-soup-name">Sopa de Carne</div><div class="drawer-soup-desc">Carne bovina desfiada, legumes e temperos da casa</div></div>
+    </div>
+    <div class="drawer-soup-item">
+      <span class="drawer-soup-icon">&#x1F357;</span>
+      <div><div class="drawer-soup-name">Sopa de Frango</div><div class="drawer-soup-desc">Frango desfiado, cenoura e batata em caldo aromático</div></div>
+    </div>
+    <div class="drawer-soup-item" style="border-bottom:none;">
+      <span class="drawer-soup-icon">&#x1F96C;</span>
+      <div><div class="drawer-soup-name">Sopa de Legumes e Verduras</div><div class="drawer-soup-desc">Mix de legumes e verduras frescos em caldo levinho e nutritivo</div></div>
+    </div>
+    <div style="font-size:10px; color:rgba(201,162,26,0.85); font-style:italic; margin-top:6px; padding:6px 10px; background:rgba(201,162,26,0.07); border-radius:8px; border-left:2px solid var(--amarelo);">&#9432; Fazemos um tipo por vez.</div>
+  </div>
+
+  <hr class="drawer-divider">
+
+  <!-- Localização -->
+  <div class="drawer-section">
+    <div class="drawer-label">Localização</div>
+    <div class="drawer-map">
+      <div class="drawer-map-row">
+        <span class="drawer-map-icon">&#128205;</span>
+        <div class="drawer-map-text">
+          <strong>Rua das Sopas, 42</strong>
+          Centro — Juazeiro, BA<br>
+          <span style="color:rgba(201,162,26,0.7); font-size:11px;">Entrega disponível no bairro</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+<div style="height:24px;"></div>
+</div>
+
+
+<!-- PÁGINA BENEFÍCIOS -->
+<div id="page-benefits" class="page" style="padding-bottom:100px;">
+  <div class="topbar">
+    <button onclick="goPage('rating')" style="background:none; border:none; color:var(--amarelo); cursor:pointer; display:flex; align-items:center; gap:6px; font-family:var(--font-display); font-size:13px; font-weight:600; padding:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Voltar
+    </button>
+    <div class="topbar-brand" style="font-size:15px;">&#10024; Clube</div>
+    <div style="width:70px;"></div>
+  </div>
+
+  <div class="benefit-hero">
+    <span class="benefit-hero-emoji">&#127873;</span>
+    <div class="benefit-hero-title">Você comprou, a relação continua!</div>
+    <div class="benefit-hero-sub">Nossos clientes não somem depois do pedido. Eles fazem parte de um clube que os trata bem.</div>
+  </div>
+
+  <div class="benefit-card">
+    <div class="benefit-icon">&#127941;</div>
+    <div>
+      <div class="benefit-title">Programa de Pontos</div>
+      <div class="benefit-desc">A cada compra você acumula pontos. Ao juntar 5 compras, <strong>ganhe 1 sopa grátis</strong> da sua escolha.</div>
+    </div>
+  </div>
+
+  <div class="benefit-card">
+    <div class="benefit-icon">&#127874;</div>
+    <div>
+      <div class="benefit-title">Desconto no Aniversário</div>
+      <div class="benefit-desc">No mês do seu aniversário, você recebe um cupom especial de desconto. Porque quem faz parte do clube merece! &#129370;</div>
+    </div>
+  </div>
+
+  <div class="benefit-card">
+    <div class="benefit-icon">&#11088;</div>
+    <div>
+      <div class="benefit-title">Avalie e Ganhe</div>
+      <div class="benefit-desc">Mandou foto ou marcou a gente nos stories? <strong>Ganhe desconto na próxima compra.</strong></div>
+    </div>
+  </div>
+
+  <div class="benefit-card">
+    <div class="benefit-icon">&#129309;</div>
+    <div>
+      <div class="benefit-title">Indique e Ganhe</div>
+      <div class="benefit-desc">Indicou um amigo e ele comprou? Você ganha desconto. Simples assim!</div>
+    </div>
+  </div>
+
+  <div class="benefit-card">
+    <div class="benefit-icon">&#127381;</div>
+    <div>
+      <div class="benefit-title">Sorteios Exclusivos</div>
+      <div class="benefit-desc">Membros do clube participam de sorteios mensais com sopas grátis e brindes surpresa.</div>
+    </div>
+  </div>
+
+  <div style="margin:20px 16px 0; background:rgba(201,162,26,0.08); border:1px solid rgba(201,162,26,0.2); border-radius:14px; padding:16px;">
+    <div style="font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--amarelo2); margin-bottom:8px;">Como entrar?</div>
+    <div style="font-size:12px; color:rgba(245,245,245,0.7); line-height:1.7;">Simples: avalie sua experiência e envie. Nossa equipe entrará em contato pelo WhatsApp para te adicionar!</div>
+  </div>
+  <div style="padding:16px 16px 0;">
+    <button onclick="goPage('rating')" style="width:100%; background:var(--amarelo2); border:none; color:var(--preto); font-family:var(--font-display); font-size:16px; font-weight:700; text-transform:uppercase; padding:16px; border-radius:14px; cursor:pointer; box-shadow:0 4px 20px rgba(232,188,32,0.3);">&#11088; Quero Participar</button>
+  </div>
+</div>
+
+</body>
+</html>
